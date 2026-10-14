@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* overflow-x: clip tidak merusak position: sticky (berbeda dengan hidden) */
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-sayak font-sans text-kapur antialiased;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: #c8782a;
+    color: #120a06;
+  }
+  :focus-visible {
+    outline: 2px solid #e8b25c;
+    outline-offset: 3px;
+  }
+  /* offset anchor agar judul section tidak tertutup navbar */
+  section[id] {
+    scroll-margin-top: 4rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
+@layer components {
+  /* Motif pucuk rabung (tunas bambu) khas ukiran Minangkabau */
+  .ukiran {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 12 L6 0 L12 12 Z M12 12 L18 0 L24 12 Z' fill='%23C8782A'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    background-position: center;
+  }
+
+  /* Input form di keranjang */
+  .field {
+    @apply w-full rounded-lg border border-kapur/15 bg-sayak-900/60 px-3.5 py-2.5 text-sm text-kapur placeholder:text-kapur-dim/50 focus:border-seduh focus:outline-none;
+  }
+}
