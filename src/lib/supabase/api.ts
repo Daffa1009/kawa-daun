@@ -119,6 +119,9 @@ export async function saveSettings(sb: SupabaseClient, s: ShopSettings) {
       close_hour: s.closeHour,
       address: s.address.trim(),
       instagram: s.instagram.trim(),
+      phone: s.phone.replace(/\D/g, ""),
+      map_embed_src: s.mapEmbedSrc.trim(),
+      map_link: s.mapLink.trim(),
     })
     .select("id");
   assertWritten(data, error);

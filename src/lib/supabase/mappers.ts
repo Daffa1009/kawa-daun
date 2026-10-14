@@ -20,6 +20,9 @@ export type SettingsRow = {
   close_hour: number;
   address: string;
   instagram: string;
+  phone?: string | null;
+  map_embed_src?: string | null;
+  map_link?: string | null;
 };
 
 export const rowToMenuItem = (r: MenuRow): MenuItem => ({
@@ -41,4 +44,7 @@ export const rowToSettings = (r: SettingsRow): ShopSettings => ({
   closeHour: r.close_hour,
   address: r.address,
   instagram: r.instagram,
+  phone: r.phone ?? "6281234567890",
+  mapEmbedSrc: r.map_embed_src ?? "",
+  mapLink: r.map_link ?? "https://maps.google.com",
 });

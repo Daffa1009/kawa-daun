@@ -21,7 +21,31 @@ export function CartDrawer() {
   const [name, setName] = useState("");
   const [orderType, setOrderType] = useState<OrderType>("Ambil di kedai");
   const [note, setNote] = useState("");
+  const [landmark, setLandmark] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsError("Geolocation tidak didukung browser ini.");
+      return;
+    }
+    setGpsLoading(true);
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsLoading(false);
+      },
+      (err) => {
+        setGpsError(err.message || "Gagal mengambil lokasi. Aktifkan GPS & izinkan akses.");
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
 
   // Escape menutup, scroll body dikunci selama drawer terbuka
   useEffect(() => {
@@ -37,8 +61,17 @@ export function CartDrawer() {
     };
   }, [isOpen, closeCart]);
 
-  const canOrder = lines.length > 0 && name.trim().length > 0;
-  const waUrl = buildWhatsAppUrl(lines, { name, orderType, note });
+  const isAntar = orderType === "Antar";
+  const antarReady = !isAntar || !!coords;
+  const canOrder = lines.length > 0 && name.trim().length > 0 && antarReady;
+  const waUrl = buildWhatsAppUrl(lines, {
+    name,
+    orderType,
+    note,
+    latitude: coords?.lat ?? null,
+    longitude: coords?.lng ?? null,
+    landmark,
+  });
 
   return (
     <AnimatePresence>
@@ -171,6 +204,40 @@ export function CartDrawer() {
                       </div>
                     </fieldset>
 
+                    {isAntar && (
+                      <div className="rounded-xl border border-seduh/20 bg-sayak-900/40 p-4 space-y-3">
+                        <p className="text-sm font-medium text-kapur">Lokasi Antar</p>
+                        <button
+                          type="button"
+                          onClick={handleGetLocation}
+                          disabled={gpsLoading || !!coords}
+                          className={cn(
+                            "w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2",
+                            coords
+                              ? "bg-daun text-white"
+                              : "bg-seduh text-sayak-900 hover:bg-seduh-light disabled:opacity-60",
+                          )}
+                        >
+                          {gpsLoading ? "Mencari lokasi…" : coords ? "✓ Lokasi Berhasil Didapat" : "📍 Ambil Lokasi GPS Saya"}
+                        </button>
+                        {coords && (
+                          <p className="text-xs text-daun">
+                            Koordinat: {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)} · <a href={`https://www.google.com/maps?q=${coords.lat},${coords.lng}`} target="_blank" rel="noopener noreferrer" className="underline">Lihat di Maps</a>
+                          </p>
+                        )}
+                        {gpsError && <p className="text-xs text-red-300">{gpsError}</p>}
+                        <Field label="Detail Alamat / Patokan Rumah (Opsional)" htmlFor="patokan">
+                          <input
+                            id="patokan"
+                            value={landmark}
+                            onChange={(e) => setLandmark(e.target.value)}
+                            placeholder="Pagar hitam depan mesjid"
+                            className="field"
+                          />
+                        </Field>
+                      </div>
+                    )}
+
                     <Field label="Catatan (opsional)" htmlFor="catatan">
                       <textarea
                         id="catatan"
@@ -201,6 +268,10 @@ export function CartDrawer() {
                       <MessageCircle className="h-5 w-5" />
                       Pesan via WhatsApp
                     </a>
+                  ) : isAntar && !coords ? (
+                    <Button disabled className="w-full py-3.5 text-base">
+                      Ambil lokasi untuk memesan
+                    </Button>
                   ) : (
                     <Button disabled className="w-full py-3.5 text-base">
                       <MessageCircle className="h-5 w-5" />

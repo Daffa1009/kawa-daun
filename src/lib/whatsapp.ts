@@ -8,6 +8,9 @@ export type CustomerInfo = {
   name?: string;
   orderType?: OrderType;
   note?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  landmark?: string;
 };
 
 export const orderTotal = (lines: OrderLine[]) =>
@@ -34,7 +37,14 @@ export function buildOrderMessage(
 
   const meta: string[] = [];
   if (customer.name?.trim()) meta.push(`Nama: ${customer.name.trim()}`);
-  if (customer.orderType) meta.push(`Jenis pesanan: ${customer.orderType}`);
+  if (customer.orderType) meta.push(`Jenis Pesanan: ${customer.orderType}`);
+  // Antar: lokasi GPS + patokan (sesuai spec)
+  if (customer.orderType === "Antar" && customer.latitude != null && customer.longitude != null) {
+    meta.push(`Lokasi Maps: https://www.google.com/maps?q=${customer.latitude},${customer.longitude}`);
+  }
+  if (customer.orderType === "Antar" && customer.landmark?.trim()) {
+    meta.push(`Patokan: ${customer.landmark.trim()}`);
+  }
   if (customer.note?.trim()) meta.push(`Catatan: ${customer.note.trim()}`);
   if (meta.length) parts.push("", ...meta);
 

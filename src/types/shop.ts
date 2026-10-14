@@ -7,6 +7,9 @@ export type ShopSettings = {
   closeHour: number; // 1-24
   address: string;
   instagram: string;
+  phone: string; // 62xxx tanpa +
+  mapEmbedSrc: string; // iframe src dari Google Maps -> Share -> Embed
+  mapLink: string; // https://maps.google.com/?q=...
 };
 
 export type ShopStatus = {

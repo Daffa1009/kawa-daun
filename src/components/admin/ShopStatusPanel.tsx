@@ -108,13 +108,30 @@ export function ShopStatusPanel({ settings, onSave }: Props) {
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="address" className="mb-2 block text-sm text-kapur-dim">Alamat kedai</label>
-          <input id="address" className="field" value={draft.address}
-            onChange={(e) => setDraft({ ...draft, address: e.target.value })} />
+          <textarea id="address" rows={2} className="field resize-none" value={draft.address}
+            onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Jl. Raya Padang-Solok KM 12..." />
         </div>
-        <div className="sm:col-span-2">
+        <div>
+          <label htmlFor="phone" className="mb-2 block text-sm text-kapur-dim">No. HP / WA (628xxx)</label>
+          <input id="phone" className="field" value={draft.phone}
+            onChange={(e) => setDraft({ ...draft, phone: e.target.value })} placeholder="6281234567890" />
+        </div>
+        <div>
           <label htmlFor="instagram" className="mb-2 block text-sm text-kapur-dim">Instagram</label>
           <input id="instagram" className="field" value={draft.instagram}
-            onChange={(e) => setDraft({ ...draft, instagram: e.target.value })} />
+            onChange={(e) => setDraft({ ...draft, instagram: e.target.value })} placeholder="@kedaikawadaun" />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="mapLink" className="mb-2 block text-sm text-kapur-dim">Link Google Maps (tombol arah)</label>
+          <input id="mapLink" className="field" value={draft.mapLink}
+            onChange={(e) => setDraft({ ...draft, mapLink: e.target.value })} placeholder="https://maps.google.com/?q=..." />
+          <p className="mt-1 text-xs text-kapur-dim/60">Buka Google Maps → Share → Copy link</p>
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="mapEmbed" className="mb-2 block text-sm text-kapur-dim">Embed URL Google Maps (iframe)</label>
+          <textarea id="mapEmbed" rows={3} className="field resize-none font-mono text-xs" value={draft.mapEmbedSrc}
+            onChange={(e) => setDraft({ ...draft, mapEmbedSrc: e.target.value })} placeholder="https://www.google.com/maps/embed?pb=..." />
+          <p className="mt-1 text-xs text-kapur-dim/60">Maps → Share → Embed a map → Copy HTML → ambil isi src=&quot;...&quot;</p>
         </div>
         <div className="sm:col-span-2">
           <Button type="submit" disabled={busy}>{busy ? "Menyimpan…" : "Simpan jam & info kedai"}</Button>
