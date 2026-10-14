@@ -11,7 +11,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { cn, formatRupiah } from "@/lib/utils";
 import type { OrderType } from "@/types/menu";
 
-const ORDER_TYPES: OrderType[] = ["Ambil di kedai", "Makan di tempat", "Antar"];
+const ORDER_TYPES: OrderType[] = ["Ambil di kedai", "Minum di tempat", "Antar"];
 
 export function CartDrawer() {
   const { isOpen, closeCart, lines, totalPrice, totalQty, add, decrement, remove, clear } =
@@ -138,7 +138,7 @@ export function CartDrawer() {
                         id="nama"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Mis. Uda Rio"
+                        placeholder="Mis. Uda Daffa"
                         autoComplete="name"
                         className="field"
                       />

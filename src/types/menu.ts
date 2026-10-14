@@ -16,4 +16,4 @@ export type MenuItem = {
   sortOrder?: number;
 };
 
-export type OrderType = "Ambil di kedai" | "Makan di tempat" | "Antar";
+export type OrderType = "Ambil di kedai" | "Minum di tempat" | "Antar";
