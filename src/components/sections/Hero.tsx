@@ -13,6 +13,11 @@ const totalFrames = FRAME_COUNT;
 
 const TEXT_FADE_START = 0.7;
 
+// 0 = frame utuh (contain), 1 = cover seperti sekarang. Naikkan mis. 0.3 bila ingin sedikit lebih besar dengan sedikit pemotongan.
+const PORTRAIT_FIT = 0;
+// bila rasio canvas (cw / ch) di bawah angka ini, layar dianggap potret/hampir persegi
+const PORTRAIT_BREAKPOINT = 1.1;
+
 const fadeUp = (delay: number): Variants => ({
   hidden: { opacity: 0, y: 48 },
   show: {
@@ -29,6 +34,7 @@ export default function Hero() {
   const hintRef = useRef<HTMLDivElement>(null);
   const curtainRef = useRef<HTMLDivElement>(null);
   const currentFrame = useRef(0);
+  const blurCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const reduceMotion = useReducedMotion();
   const { imagesRef, progress, ready } = useFramePreloader(totalFrames);
@@ -45,24 +51,56 @@ export default function Hero() {
       if (!img || !img.naturalWidth) return;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      // logical CSS size
       const logicalW = canvas.width / dpr;
       const logicalH = canvas.height / dpr;
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
 
-      // reset then scale for HiDPI — draw in logical pixels, buffer stays sharp
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
 
-      // object-cover proportional
-      const scale = Math.max(logicalW / img.naturalWidth, logicalH / img.naturalHeight);
-      const w = img.naturalWidth * scale;
-      const h = img.naturalHeight * scale;
-      const x = (logicalW - w) / 2;
-      const y = (logicalH - h) / 2;
-      ctx.drawImage(img, x, y, w, h);
+      const cover = Math.max(logicalW / iw, logicalH / ih);
+      const contain = Math.min(logicalW / iw, logicalH / ih);
+      const isPortrait = logicalW / logicalH < PORTRAIT_BREAKPOINT;
+      const scale = isPortrait ? contain + (cover - contain) * PORTRAIT_FIT : cover;
+
+      if (isPortrait) {
+        // --- blur fill via small offscreen canvas (Safari-safe, no ctx.filter) ---
+        if (!blurCanvasRef.current) blurCanvasRef.current = document.createElement("canvas");
+        const bCanvas = blurCanvasRef.current;
+        const bw = 48;
+        const bh = Math.max(1, Math.round(bw * (logicalH / logicalW)));
+        if (bCanvas.width !== bw || bCanvas.height !== bh) {
+          bCanvas.width = bw;
+          bCanvas.height = bh;
+        }
+        const bctx = bCanvas.getContext("2d");
+        if (bctx) {
+          bctx.setTransform(1, 0, 0, 1, 0, 0);
+          bctx.clearRect(0, 0, bw, bh);
+          bctx.imageSmoothingEnabled = true;
+          bctx.imageSmoothingQuality = "high";
+          const bScale = Math.max(bw / iw, bh / ih);
+          const bW = iw * bScale;
+          const bH = ih * bScale;
+          bctx.drawImage(img, (bw - bW) / 2, (bh - bH) / 2, bW, bH);
+        }
+        // stretch small canvas to full — creates blur
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(bCanvas, 0, 0, logicalW, logicalH);
+        ctx.fillStyle = "rgba(18,10,6,0.45)";
+        ctx.fillRect(0, 0, logicalW, logicalH);
+      }
+
+      const w = iw * scale;
+      const h = ih * scale;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, (logicalW - w) / 2, (logicalH - h) / 2, w, h);
     },
     [imagesRef],
   );
@@ -148,7 +186,7 @@ export default function Hero() {
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sayak/60 via-transparent to-sayak/90" />
         <div ref={curtainRef} aria-hidden className="pointer-events-none absolute inset-0 bg-sayak opacity-0" />
 
-        <div ref={textRef} className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center will-change-transform">
+        <div ref={textRef} className="absolute inset-0 z-10 flex flex-col items-center px-6 text-center will-change-transform justify-start pt-[22svh] md:justify-center md:pt-0">
           <motion.h1 variants={fadeUp(0.15)} initial="hidden" animate={state} className="font-display text-[length:clamp(2.6rem,9vw,7.5rem)] font-semibold leading-[0.95] tracking-[0.04em] text-kapur [text-shadow:0_4px_40px_rgba(18,10,6,0.85)]">
             KEDAI
             <br />

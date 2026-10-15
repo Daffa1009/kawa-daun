@@ -1,5 +1,5 @@
 import { SHOP } from "@/data/shop";
-import type { MenuItem, OrderType } from "@/types/menu";
+import type { MenuItem, OrderType, PaymentMethod } from "@/types/menu";
 import { formatRupiah } from "./utils";
 
 export type OrderLine = { item: MenuItem; qty: number };
@@ -11,6 +11,7 @@ export type CustomerInfo = {
   latitude?: number | null;
   longitude?: number | null;
   landmark?: string;
+  paymentMethod?: PaymentMethod;
 };
 
 export const orderTotal = (lines: OrderLine[]) =>
@@ -38,6 +39,11 @@ export function buildOrderMessage(
   const meta: string[] = [];
   if (customer.name?.trim()) meta.push(`Nama: ${customer.name.trim()}`);
   if (customer.orderType) meta.push(`Jenis Pesanan: ${customer.orderType}`);
+  if (customer.paymentMethod === "QRIS") {
+    meta.push("Pembayaran: QRIS (akan dibayar setelah pesanan diterima)");
+  } else {
+    meta.push(`Pembayaran: ${customer.paymentMethod ?? "Tunai"}`);
+  }
   // Antar: lokasi GPS + patokan (sesuai spec)
   if (customer.orderType === "Antar" && customer.latitude != null && customer.longitude != null) {
     meta.push(`Lokasi Maps: https://www.google.com/maps?q=${customer.latitude},${customer.longitude}`);

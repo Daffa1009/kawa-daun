@@ -10,6 +10,8 @@ export type ShopSettings = {
   phone: string; // 62xxx tanpa +
   mapEmbedSrc: string; // iframe src dari Google Maps -> Share -> Embed
   mapLink: string; // https://maps.google.com/?q=...
+  qrisEnabled: boolean;
+  qrisImage: string;
 };
 
 export type ShopStatus = {

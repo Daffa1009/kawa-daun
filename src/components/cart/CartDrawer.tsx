@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Minus, Plus, Trash2, X, MessageCircle } from "lucide-react";
+import { Minus, Plus, Trash2, X, MessageCircle, AlertTriangle, Download, Copy } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "./CartProvider";
 import { buttonClass, Button } from "@/components/ui/Button";
 import { useShopStatus } from "@/hooks/useShopStatus";
+import { useShopData } from "@/components/providers/ShopDataProvider";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { cn, formatRupiah } from "@/lib/utils";
-import type { OrderType } from "@/types/menu";
+import type { OrderType, PaymentMethod } from "@/types/menu";
 
 const ORDER_TYPES: OrderType[] = ["Ambil di kedai", "Minum di tempat", "Antar"];
 
@@ -17,6 +18,7 @@ export function CartDrawer() {
   const { isOpen, closeCart, lines, totalPrice, totalQty, add, decrement, remove, clear } =
     useCart();
   const status = useShopStatus();
+  const { settings } = useShopData();
 
   const [name, setName] = useState("");
   const [orderType, setOrderType] = useState<OrderType>("Ambil di kedai");
@@ -25,7 +27,16 @@ export function CartDrawer() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Tunai");
+  const [copied, setCopied] = useState(false);
+  const [qrisModal, setQrisModal] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  const qrisAvailable = !!settings.qrisEnabled && !!settings.qrisImage;
+
+  useEffect(() => {
+    if (!qrisAvailable && paymentMethod === "QRIS") setPaymentMethod("Tunai");
+  }, [qrisAvailable, paymentMethod]);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -47,10 +58,33 @@ export function CartDrawer() {
     );
   };
 
-  // Escape menutup, scroll body dikunci selama drawer terbuka
+  const handleCopy = async () => {
+    try {
+      const raw = String(totalPrice);
+      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(raw);
+      else {
+        const el = document.createElement("textarea");
+        el.value = raw;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCart();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (qrisModal) setQrisModal(false);
+        else closeCart();
+      }
+    };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -59,7 +93,7 @@ export function CartDrawer() {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [isOpen, closeCart]);
+  }, [isOpen, closeCart, qrisModal]);
 
   const isAntar = orderType === "Antar";
   const antarReady = !isAntar || !!coords;
@@ -71,6 +105,7 @@ export function CartDrawer() {
     latitude: coords?.lat ?? null,
     longitude: coords?.lng ?? null,
     landmark,
+    paymentMethod,
   });
 
   return (
@@ -238,6 +273,68 @@ export function CartDrawer() {
                       </div>
                     )}
 
+                    {/* Metode pembayaran */}
+                    <fieldset>
+                      <legend className="mb-2 text-sm text-kapur-dim">Metode pembayaran</legend>
+                      <div className={cn("grid gap-2", qrisAvailable ? "grid-cols-2" : "grid-cols-1")}>
+                        <label
+                          className={cn(
+                            "cursor-pointer rounded-lg border px-3 py-2.5 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-seduh-light",
+                            paymentMethod === "Tunai"
+                              ? "border-seduh bg-seduh/15 text-kapur"
+                              : "border-kapur/15 text-kapur-dim hover:border-kapur/30",
+                          )}
+                        >
+                          <input type="radio" name="paymentMethod" value="Tunai" checked={paymentMethod === "Tunai"} onChange={() => setPaymentMethod("Tunai")} className="sr-only" />
+                          Tunai
+                        </label>
+                        {qrisAvailable && (
+                          <label
+                            className={cn(
+                              "cursor-pointer rounded-lg border px-3 py-2.5 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-seduh-light",
+                              paymentMethod === "QRIS"
+                                ? "border-seduh bg-seduh/15 text-kapur"
+                                : "border-kapur/15 text-kapur-dim hover:border-kapur/30",
+                            )}
+                          >
+                            <input type="radio" name="paymentMethod" value="QRIS" checked={paymentMethod === "QRIS"} onChange={() => setPaymentMethod("QRIS")} className="sr-only" />
+                            QRIS
+                          </label>
+                        )}
+                      </div>
+                      {paymentMethod === "Tunai" && (
+                        <p className="mt-2 text-xs text-kapur-dim">Bayar tunai saat pesanan diterima/diambil.</p>
+                      )}
+                    </fieldset>
+
+                    {paymentMethod === "QRIS" && qrisAvailable && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="overflow-hidden rounded-xl border border-seduh/20 bg-sayak-900/40 p-4 space-y-4"
+                      >
+                        <button type="button" onClick={() => setQrisModal(true)} className="mx-auto block rounded-lg bg-white p-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={settings.qrisImage} alt="Kode QRIS Kedai Kawa Daun" className="max-h-[240px] max-w-[240px] w-full object-contain" />
+                        </button>
+                        <div className="text-center">
+                          <p className="text-sm text-kapur-dim">Total yang harus dibayar</p>
+                          <p className="font-display text-2xl text-kapur">{formatRupiah(totalPrice)}</p>
+                          <button type="button" onClick={handleCopy} className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-kapur/20 px-3 py-1.5 text-xs text-kapur hover:border-seduh">
+                            <Copy className="h-3.5 w-3.5" /> {copied ? "Tersalin ✓" : "Salin nominal"}
+                          </button>
+                        </div>
+                        <a href={settings.qrisImage} download target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 text-sm text-seduh-light hover:underline">
+                          <Download className="h-4 w-4" /> Unduh QRIS
+                        </a>
+                        <div className="flex gap-3 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3">
+                          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />
+                          <p className="text-sm text-amber-200">Jangan bayar dulu. Lakukan pembayaran QRIS setelah pesananmu diterima dan dikonfirmasi kedai lewat WhatsApp.</p>
+                        </div>
+                        <p className="text-center text-xs text-kapur-dim">QRIS ini statis, ketik nominal sesuai total di atas.</p>
+                      </motion.div>
+                    )}
+
                     <Field label="Catatan (opsional)" htmlFor="catatan">
                       <textarea
                         id="catatan"
@@ -289,6 +386,19 @@ export function CartDrawer() {
               </>
             )}
           </motion.aside>
+
+          {qrisModal && qrisAvailable && (
+            <div role="dialog" aria-modal="true" aria-label="QRIS besar" className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-sayak-900/80 backdrop-blur-sm" onClick={() => setQrisModal(false)} />
+              <div className="relative rounded-2xl bg-white p-4">
+                <button type="button" onClick={() => setQrisModal(false)} aria-label="Tutup" className="absolute -right-2 -top-2 grid h-8 w-8 place-items-center rounded-full bg-sayak-800 text-kapur">
+                  <X className="h-4 w-4" />
+                </button>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={settings.qrisImage} alt="Kode QRIS Kedai Kawa Daun" className="max-h-[80vh] max-w-[90vw] object-contain" />
+              </div>
+            </div>
+          )}
         </>
       )}
     </AnimatePresence>

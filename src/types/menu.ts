@@ -17,3 +17,5 @@ export type MenuItem = {
 };
 
 export type OrderType = "Ambil di kedai" | "Minum di tempat" | "Antar";
+
+export type PaymentMethod = "Tunai" | "QRIS";

@@ -23,6 +23,8 @@ export type SettingsRow = {
   phone?: string | null;
   map_embed_src?: string | null;
   map_link?: string | null;
+  qris_enabled?: boolean | null;
+  qris_image?: string | null;
 };
 
 export const rowToMenuItem = (r: MenuRow): MenuItem => ({
@@ -47,4 +49,6 @@ export const rowToSettings = (r: SettingsRow): ShopSettings => ({
   phone: r.phone ?? "6281234567890",
   mapEmbedSrc: r.map_embed_src ?? "",
   mapLink: r.map_link ?? "https://maps.google.com",
+  qrisEnabled: !!r.qris_enabled,
+  qrisImage: r.qris_image ?? "",
 });

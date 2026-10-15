@@ -14,6 +14,7 @@ import {
 } from "@/lib/supabase/api";
 import { cn } from "@/lib/utils";
 import { MenuManager } from "./MenuManager";
+import { PaymentPanel } from "./PaymentPanel";
 import { ShopStatusPanel } from "./ShopStatusPanel";
 import type { MenuItem } from "@/types/menu";
 import type { ShopSettings } from "@/types/shop";
@@ -100,6 +101,7 @@ export function Dashboard({ sb, email }: { sb: SupabaseClient; email: string }) 
 
       <div className="space-y-6">
         <ShopStatusPanel settings={settings} onSave={onSaveSettings} />
+        <PaymentPanel sb={sb} settings={settings} onSave={onSaveSettings} />
         {menu === null ? (
           <p className="text-sm text-kapur-dim">Memuat menu…</p>
         ) : (

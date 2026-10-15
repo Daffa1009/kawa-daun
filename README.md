@@ -69,6 +69,13 @@ Palet warna diambil dari animasi hero: *sayak* (cokelat tua), *seduh* (amber), *
 - Tombol **"Pesan via WhatsApp"** menyusun pesan terformat dan membuka `wa.me` ke nomor kedai.
 - Di setiap card ada tombol ikon WhatsApp untuk memesan **1 porsi langsung** tanpa keranjang.
 
+**Pembayaran Tunai / QRIS**
+- Pelanggan memilih metode pembayaran **Tunai** atau **QRIS** di keranjang. Tersedia untuk semua jenis pesanan.
+- Jika QRIS dipilih: tampil gambar QRIS (klik untuk perbesar), total yang harus dibayar dengan tombol salin nominal, tombol unduh, dan peringatan agar tidak membayar sebelum pesanan dikonfirmasi kedai.
+- Pesan WhatsApp otomatis mencantumkan metode pembayaran.
+- Admin mengunggah/mengganti/menghapus foto QRIS dan menyalakan/mematikan opsi QRIS di panel admin.
+- Tidak ada payment gateway — konfirmasi pembayaran tetap manual lewat WhatsApp.
+
 **Umum**
 - Responsif (HP, tablet, desktop), navigasi mobile, dan scroll halus ke anchor.
 - Menghormati pengaturan *reduced motion* di perangkat pengguna.
@@ -78,6 +85,7 @@ Palet warna diambil dari animasi hero: *sayak* (cokelat tua), *seduh* (amber), *
 
 - **Login** dengan email dan kata sandi (Supabase Auth).
 - **Status kedai:** pilih *Otomatis* (ikut jam buka), *Buka sekarang*, atau *Tutup sekarang*, serta atur jam buka-tutup, alamat, dan Instagram.
+- **Pembayaran QRIS:** unggah/ganti/hapus foto QRIS, saklar aktif/nonaktif. Saklar tidak bisa dinyalakan jika belum ada foto.
 - **Menu dan stok:** saklar **Tersedia / Habis** per menu, tambah menu baru, edit (nama, harga, deskripsi, bahan, label), upload foto, dan hapus menu.
 - Pembaruan **realtime**: perubahan di admin langsung tampil di website pelanggan tanpa refresh.
 - Halaman admin tidak diindeks mesin pencari (`noindex`).
@@ -95,7 +103,9 @@ kedai-kawa-daun/
 │   └── rename-frames.mjs       bantu rename frame ezgif → frame_000.jpg dst.
 ├── supabase/
 │   ├── 1-schema.sql            tabel, keamanan (RLS), data awal, storage, realtime
-│   └── 2-daftar-admin.sql      mendaftarkan akun admin
+│   ├── 2-daftar-admin.sql      mendaftarkan akun admin
+│   ├── 3-location-settings.sql kolom lokasi & peta
+│   └── 4-pembayaran.sql        kolom qris_enabled & qris_image
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx          font, metadata dasar

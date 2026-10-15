@@ -122,6 +122,8 @@ export async function saveSettings(sb: SupabaseClient, s: ShopSettings) {
       phone: s.phone.replace(/\D/g, ""),
       map_embed_src: s.mapEmbedSrc.trim(),
       map_link: s.mapLink.trim(),
+      qris_enabled: s.qrisEnabled,
+      qris_image: s.qrisImage.trim(),
     })
     .select("id");
   assertWritten(data, error);
@@ -131,11 +133,33 @@ export async function uploadMenuImage(
   sb: SupabaseClient,
   file: File,
 ): Promise<string> {
+  return uploadImage(sb, file, "menu");
+}
+
+export async function uploadImage(
+  sb: SupabaseClient,
+  file: File,
+  folder: "menu" | "qris",
+): Promise<string> {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${crypto.randomUUID()}.${ext}`;
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
   const { error } = await sb.storage
     .from("menu-images")
     .upload(path, file, { cacheControl: "3600", contentType: file.type });
   if (error) throw new Error(error.message);
   return sb.storage.from("menu-images").getPublicUrl(path).data.publicUrl;
+}
+
+export async function removeStorageFileByUrl(sb: SupabaseClient, publicUrl: string) {
+  try {
+    const marker = "/menu-images/";
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return;
+    const urlPart = publicUrl.slice(idx + marker.length).split("?")[0].split("#")[0];
+    const path = decodeURIComponent(urlPart);
+    if (!path) return;
+    await sb.storage.from("menu-images").remove([path]);
+  } catch {
+    // ignore — don't fail save on cleanup error
+  }
 }
