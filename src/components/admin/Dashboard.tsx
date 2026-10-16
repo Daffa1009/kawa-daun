@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { MenuManager } from "./MenuManager";
 import { PaymentPanel } from "./PaymentPanel";
+import { ReviewsPanel } from "./ReviewsPanel";
 import { ShopStatusPanel } from "./ShopStatusPanel";
 import type { MenuItem } from "@/types/menu";
 import type { ShopSettings } from "@/types/shop";
@@ -102,6 +103,7 @@ export function Dashboard({ sb, email }: { sb: SupabaseClient; email: string }) 
       <div className="space-y-6">
         <ShopStatusPanel settings={settings} onSave={onSaveSettings} />
         <PaymentPanel sb={sb} settings={settings} onSave={onSaveSettings} />
+        <ReviewsPanel sb={sb} notify={notify} />
         {menu === null ? (
           <p className="text-sm text-kapur-dim">Memuat menu…</p>
         ) : (

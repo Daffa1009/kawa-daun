@@ -1,10 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MenuItem } from "@/types/menu";
+import type { Review, ReviewStats, ReviewStatus } from "@/types/review";
 import type { ShopSettings } from "@/types/shop";
 import {
   rowToMenuItem,
+  rowToReview,
   rowToSettings,
   type MenuRow,
+  type ReviewRow,
   type SettingsRow,
 } from "./mappers";
 
@@ -162,4 +165,65 @@ export async function removeStorageFileByUrl(sb: SupabaseClient, publicUrl: stri
   } catch {
     // ignore — don't fail save on cleanup error
   }
+}
+
+/* ---------- Ulasan (publik) ---------- */
+
+export async function fetchApprovedReviews(sb: SupabaseClient, limit = 12): Promise<Review[]> {
+  const { data, error } = await sb
+    .from("reviews")
+    .select("*")
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return ((data ?? []) as ReviewRow[]).map(rowToReview);
+}
+
+export async function fetchReviewStats(sb: SupabaseClient): Promise<ReviewStats> {
+  const { data, error } = await sb.rpc("get_review_stats");
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return { average: Number(row?.avg_rating ?? 0), total: Number(row?.total ?? 0) };
+}
+
+export async function submitReview(
+  sb: SupabaseClient,
+  input: { name: string; rating: number; comment: string },
+) {
+  const { error } = await sb.from("reviews").insert({
+    name: input.name.trim(),
+    rating: input.rating,
+    comment: input.comment.trim(),
+  });
+  if (error) throw new Error(error.message);
+}
+
+/* ---------- Ulasan (admin) ---------- */
+
+export async function fetchAllReviews(sb: SupabaseClient): Promise<Review[]> {
+  const { data, error } = await sb
+    .from("reviews")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as ReviewRow[]).map(rowToReview);
+}
+
+export async function setReviewStatus(sb: SupabaseClient, id: string, status: ReviewStatus) {
+  const { data, error } = await sb
+    .from("reviews")
+    .update({ status })
+    .eq("id", id)
+    .select("id");
+  assertWritten(data, error);
+}
+
+export async function deleteReview(sb: SupabaseClient, id: string) {
+  const { data, error } = await sb
+    .from("reviews")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  assertWritten(data, error);
 }

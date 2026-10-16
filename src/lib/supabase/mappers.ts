@@ -1,4 +1,5 @@
 import type { MenuItem } from "@/types/menu";
+import type { Review, ReviewStatus } from "@/types/review";
 import type { ShopSettings, StatusMode } from "@/types/shop";
 
 export type MenuRow = {
@@ -51,4 +52,22 @@ export const rowToSettings = (r: SettingsRow): ShopSettings => ({
   mapLink: r.map_link ?? "https://maps.google.com",
   qrisEnabled: !!r.qris_enabled,
   qrisImage: r.qris_image ?? "",
+});
+
+export type ReviewRow = {
+  id: string;
+  name: string;
+  rating: number;
+  comment: string;
+  status: ReviewStatus;
+  created_at: string;
+};
+
+export const rowToReview = (r: ReviewRow): Review => ({
+  id: r.id,
+  name: r.name,
+  rating: r.rating,
+  comment: r.comment,
+  status: r.status,
+  createdAt: r.created_at,
 });

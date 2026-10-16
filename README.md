@@ -2,6 +2,10 @@
 
 Website company profile sekaligus web app pemesanan untuk **Kedai Kawa Daun**, UMKM minuman seduhan daun kopi tradisional khas Minangkabau yang disajikan dalam *sayak* (tempurung kelapa).
 
+# Link demo
+'https://kawadaun.my.id'
+
+
 Website ini punya dua tujuan:
 
 1. **Bercerita.** Mengenalkan sejarah dan budaya kawa daun lewat tampilan sinematik, premium, dan interaktif.
